@@ -1,0 +1,37 @@
+REPORT z_fetch_prod_order.
+
+DATA: lv_production_order TYPE aufnr VALUE '1000001234',  
+      ls_order_header     TYPE bapi_order_header,         
+      lt_order_components TYPE TABLE OF bapi_order_comp, 
+      ls_order_component  TYPE bapi_order_comp,           
+      lt_return           TYPE TABLE OF bapiret2,         
+      ls_return           TYPE bapiret2.
+
+CALL FUNCTION 'BAPI_PRODORD_GET_DETAIL'
+  EXPORTING
+    order_number = lv_production_order
+  IMPORTING
+    order_header = ls_order_header
+  TABLES
+    order_components = lt_order_components
+    return           = lt_return.
+
+LOOP AT lt_return INTO ls_return.
+  IF ls_return-type = 'E'.
+    WRITE: / 'Error Fetching Production Order Details:', ls_return-message.
+    EXIT.
+  ENDIF.
+ENDLOOP.
+
+IF ls_order_header-aufnr IS NOT INITIAL.
+  WRITE: / 'Production Order:', ls_order_header-aufnr.
+  WRITE: / 'Material:', ls_order_header-matnr.
+  WRITE: / 'Quantity:', ls_order_header-gsmng.
+  WRITE: / 'Start Date:', ls_order_header-gstrp.
+  WRITE: / 'End Date:', ls_order_header-gltrp.
+  WRITE: / 'Status:', ls_order_header-sysst.
+ENDIF.
+
+LOOP AT lt_order_components INTO ls_order_component.
+  WRITE: / 'Component:', ls_order_component-matnr, 'Quantity:', ls_order_component-bdmng.
+ENDLOOP.
